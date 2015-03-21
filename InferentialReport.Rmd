@@ -38,7 +38,7 @@ with(ToothGrowth, table(dose,supp))
 
 ### Overview 
 
-A summary boxplots from the data suggest some inferential questions to test.
+Summary boxplots from the data suggest some inferential questions to test.
 
 
 ```{r, echo=FALSE}
@@ -59,7 +59,7 @@ There seems to be a clear dose response relationship between the supplements and
 
 ### Subsetting Growth by Dose and Supplement Type
 
-Breaking the dose response relationship out *by* supplement type highlights some interesting differences between the supplement types at different doses. 
+Breaking the dose response relationship out *by* supplement type highlights some differences between the supplement types at different doses. 
 
 Although there does not seem to be a significant difference in growth between the supplements at the *highest* dose level, at the low and middle dose levels, the `OJ` supplement demonstrates more growth.  I will present the statistical test results below.
 
@@ -87,22 +87,27 @@ boxplot(len ~ dose,
 
 ### Hypothesis Tests of growth vs. supplement *Type*
 
-The underlying assumption to this analysis is that the growth measurements at given dose and supplement type are iid random variables.  With sample sizes, this makes the *t-test* appropriate.  The sample groups are not paired (different animals).  Based on the wide variation in box sizes above, it seems prudent to use the default assumption of unequal variances between the rgoups.  
+The underlying assumption to this analysis is that the growth measurements at given dose and supplement type are iid random variables.  With small sample sizes of `10`, this makes the *t-test* appropriate.  The sample groups are not paired (different animals).  Based on the wide variation in the boxplot box sizes above, it seems prudent to use the default assumption of *unequal* variances between the groups.  
 
+#### Overall
 
-Over the data for *all* dose levels, we cannot reject the hypothesis that the difference in tooth growth between the supplement types is zero, because the 95% CI includes zero.
-
+Over the data for *all* dose levels, we cannot reject the hypothesis that the difference in tooth growth between the supplement types is zero, because the 95% CI includes zero.  
 
 ```{r}
 t.test( len ~ supp, ToothGrowth )
 ```
 
-Tooth growth between supplements at the *same* dose levels, does show some significant differences though.  
+#### Comparing at the Same Dose Levels
 
-The `R` code below will build up a result dataframe with t-test results for the tooth growth between supplements, by dose levels:
+Tooth growth between supplements at the *same* dose levels does show some significant differences though.  
 
+The table below summarizes *t*-test hypothesis testing results for the null hypothesis that the *mean difference in tooth growth between supplement types* is zero at different dose levels. 
 
-```{r}
+```{r, echo=FALSE}
+# 
+# The `R` code below will build up a result dataframe with t-test results for 
+# the tooth growth between supplements, by dose levels:
+# 
 dose <- c(0.5,1.0,2.0)
 
 results <- data.frame()
@@ -113,15 +118,21 @@ for (d in dose) {
   row <- with(tdose, 
               cbind(d,statistic,parameter,
                     conf.int[1],conf.int[2],
-                    p.value)
+                    p.value,estimate[1],estimate[2])
               )
   results <- rbind(results, row)
 }
 
 names(results) <- c("Dose","t.stat","df",
                     "95CI.lo", "95CI.hi",
-                    "pval")
+                    "pval", "mean.OJ", "mean.VC")
 
 round(results,3)
 ```
+
+As the boxplots above suggest, the hypothesis testing results support the conclusions that:
+
+1. Tooth growth is significantly greater at the 0.5 and 1.0 doses with `OJ`.  The 95% CI does not include zero.  (p-values = `r round(c(results[dose==0.5,]$pval,results[dose==1.0,]$pval),3)`, respectively).  
+
+2. At the highest dose level, 2.0, there is no significant difference in tooth growth.  The 95% CI includes zero.
 

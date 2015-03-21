@@ -34,23 +34,6 @@ head(ToothGrowth)
 with(ToothGrowth, table(dose,supp))
 ```
 
-The `coplot` example from the `help()` file gives a nice overview of the results.  In this, you can see a series of length measurements from each of the 10 animals at 3 dose levels for each of the two supplement forms.  A dose-response trend seems clear in the data.
-
-To be clear, *independent* groups of 10 animals were used for each of 6 different conditions for 60 animals in all.  (i.e., the groups were not paired.)
-
-
-```{r, echo=FALSE}
-
-require(graphics)
-coplot(len ~ dose | supp, 
-       data = ToothGrowth, panel = panel.smooth,
-       xlab = "ToothGrowth vs. supplement & dose",
-       ylab = "length"
-       )
-
-```
-
-
 ## Statistical Effects of Dose & Supplement
 
 ### Overview 

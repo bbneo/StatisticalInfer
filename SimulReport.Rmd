@@ -1,0 +1,166 @@
+---
+title: "SimulationReport"
+author: "bbneo"
+date: "03/18/2015"
+output: pdf_document
+---
+
+    
+# Simulation Exercise:  
+
+The distribution of a sample mean statistic with reference to the population mean and standard deviation and its relation to the `t` and `Z` distributions.
+
+## Overview
+```{r, echo=FALSE}
+n = 40
+lambda = 0.2
+set.seed(3.1415926)
+```
+
+In this report, we will illustrate the nature of the distribution of the `n = ` `r n` *sample mean* statistic from an exponential population distribution.  What we will see is that:
+
+- the *sample mean* statistic can be a good estimator of the mean of the population (exponential) distribution,
+- the distribution of the sample means approaches a `t` or `Z` distribution as the sample size increases as expected from the Central Limit Theorem,
+- the `standard` *`error`* of this population mean estimator (`SE`_`mean`_) depends on the `standard deviation` of the sample means and the sample size, and
+- the `standard error` of this *mean estimator* has a much narrower confidence interval for the **`population mean`** estimate than either
+    - the *standard deviation* of the distribution of the sample means, or
+    - the *standard deviation* of the population distribution itself
+
+
+## The `exponential` distribution
+
+The population distribution we will use for this illustration is the *exponential* distribution.  The `exponential` distribution is implemented in R as `dexp/rexp`.  
+
+The distribution has one parameter, the `rate` or `lambda`, and both the theoretical `mean` **and** `standard deviation` (of random *single* samples) of the (*population*) distribution are  `1 / lambda`.
+
+For `lambda = ` `r lambda`, `rexp` looks like this:
+
+```{r, echo=FALSE}
+xMax <- 1/lambda + 2 * 1/lambda
+theorMean <- 1/lambda; theorSd <- 1/lambda
+
+x <- seq(0,xMax,1/lambda/50)
+dist <- dexp(x,rate=lambda)
+
+plot(x, dist, main=paste("The exponential distribution, lambda =", lambda), type = 'l')
+abline(v = theorMean, lwd = 2)
+abline(v = theorMean + c(-1,1)*theorSd, lwd = 2, lty = "dashed")
+```
+
+The population `mean` is represented as solid vertical line at `r theorMean`, and the dashed lines represent `+/- 1 standard deviation` of the distribution at `r theorMean + c(-1,1)*theorSd`.  Notice that this distribution is skewed and does not have a tail approaching zero on the left.  
+
+## Simulation and the *sample mean* as an *estimator* of the *population mean*
+
+We will take `1000` **\*** (`n = ` `r n`) samples from the popultation distribution `rexp`, and use these samples to estimate the *population mean* and the *standard error* of that *mean* estimate (`SE`_`mean`_).  We create these samples in R by successively adding `n = ` `r n` *sample means* to a vector `mns`.
+
+```{r}
+mns <- NULL
+for (i in 1:1000) mns <- c(mns, mean(rexp(n,lambda)) )
+```
+
+## The distribution of the *sample means*
+
+The distribution of these `sample means` approaches a `t` or `Z` distribution as is shown in the figure below:
+
+
+```{r, echo=FALSE}
+sampleMean <- mean(mns)   # mean of the sample means
+sampleSd <- sd(mns)       # sd of the sample means
+scale <- 200/0.4
+
+hist(mns,  xlim = c(0,10), ylim = c(0,250),
+     main = paste("Histogram of Means, 1000 * n =", n, 
+                  "Samples rexp, lambda=",lambda),
+     xlab="Sample means")
+
+abline(v=theorMean, lwd=2)
+abline(v=(theorMean + c(-1,1)*theorSd), lwd=2, lty="dashed")
+
+abline(v=sampleMean,lwd=2,col="darkblue")
+abline(v=sampleMean + c(-1,1)*qnorm(0.975)*sampleSd,lwd=2,col="darkblue",lty="dotted")
+
+# overlay the t and normal distributions
+
+lines(x,scale*dt((x-sampleMean),df=n-1), col = "darkgreen", lwd = 2)
+lines(x,scale*dnorm(x,mean=sampleMean,sd=sampleSd), col = "darkred", lwd = 2)
+```
+
+The `mean` of the *sample means* is `r sampleMean` (represented as a solid vertical dark blue line) with a 95% confidence interval for the *sample means* represented by the dotted dark blue vertical lines on the figure at:
+
+```{r} 
+sampleMean + c(-1,1)*qnorm(0.975)*sampleSd
+```  
+
+
+The *population mean* and standard deviation are represented by a vertical line at `x = ` `r theorMean`, and dashed lines at `x = ` `r theorMean + c(-1,1)*theorSd`.  
+
+Notice that these population variation lines are just **one** population `sd` about the mean... as opposed to a normal distribution `95%` quartile `r c(-1,1)*qnorm(0.975)` `* sd` interval.
+
+A `t density distribution` with `df= ` `r n-1` is overlaid in dark green.
+
+A `normal` density distribution with mean and sd corresponding to the sample distribution is overlaid in dark red.
+
+## A closer look at the confidence interval for the population mean estimate
+
+We will zoom in on the 95% confidence interval of the *sample mean* and its `SE`_`mean`_ as an estimate of the *population mean* of `rexp`.
+
+```{r, echo=FALSE}
+hist(mns,  xlim = c(4,6), ylim = c(0,250),
+     main = paste("Histogram of Means, 1000 * n =", n, 
+                  "Samples rexp, lambda=",lambda),
+     xlab="Sample means")
+
+abline( v = theorMean, lwd = 4 )
+
+abline(v = sampleMean, col = "darkblue", lwd = 4, lty = "dotted")
+abline(v=sampleMean + c(-1,1)*qnorm(0.975)*sampleSd,lwd=2,col="darkblue",lty="dotted")
+
+abline( v = c(sampleMean + c(-1,1)*qt(0.975,n-1)*sampleSd/sqrt(n)), 
+        col = "red", lwd = 2, lty = "longdash" )
+
+lines(x,scale*dnorm(x,mean=sampleMean,sd=sampleSd), col = "darkred", lwd = 2)
+```
+
+The 95% confidence interval for the estimation of the `population (theoretical) mean` from this set of samples using a `t` statistic is:  
+
+```{r}
+sampleMean + c(-1,1)*qt(0.975,n-1)*sampleSd/sqrt(n)
+```
+
+which is represented in the figure by vertical red dashed lines.  
+
+
+## IN SUMMARY
+
+For this report, `n =` `r n`:
+
+statistic | mean | sd | 95% CI 
+----------|------|-----|--------
+population theoretical | `r theorMean` | `r theorSd` | --
+sample mean | `r sampleMean` | `r sampleSd` | `r sampleMean + c(-1,1)*qnorm(0.975)*sampleSd`
+pop. mean *estim* | `r sampleMean` |  | `r sampleMean + c(-1,1)*qnorm(0.975)*sampleSd/sqrt(n)`
+
+and the 95% CI for the *sample mean* as an estimator of the *population mean* is (using a Z quartile):
+
+```{r}
+sampleMean + c(-1,1)*qnorm(0.975)*sampleSd/sqrt(n)
+```
+
+`qnorm(0.975) = ` `r qnorm(0.975)`, and the `SE`_`mean`_ is:
+
+```{r} 
+sampleSd/sqrt(n)
+```
+
+
+- the *sample mean* statistic can be a good estimator of the mean of the population (exponential) distribution,
+
+- the distribution of the sample means approaches a `t` or `Z` distribution as the sample size increases as expected from the Central Limit Theorem,
+
+- the `standard` *`error`* of this population mean estimator (`SE`_`mean`_) depends on the `standard deviation` of the sample means and the sample size, and
+
+- the `standard error` of this *mean estimator* has a much narrower confidence interval for the **`population mean`** estimate than either
+
+    - the *standard deviation* of the distribution of the sample means, or
+    - the *standard deviation* of the population distribution itself (the distribution of a large collection of random exponentials)
+

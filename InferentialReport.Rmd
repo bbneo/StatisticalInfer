@@ -1,0 +1,144 @@
+---
+title: "Inferential Exercise"
+author: "bbneo"
+date: "03/18/2015"
+output: pdf_document
+---
+
+# The Effect of Vitamin C on Tooth Growth in Guinea Pigs
+
+## Introduction
+
+The `ToothGrowth` dataset in `R` is a set of measurements on:
+
+"length of odontoblasts (teeth) in each of **10   guinea pigs** at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid)."
+
+```{r}
+data(ToothGrowth)
+```
+
+See:
+
+```{r, eval=FALSE}
+help(ToothGrowth)
+```
+
+In this exercise, we will perform some basic exploratory and inferential data analysis on the `ToothGrowth` dataset.
+
+## Basic Summary of the ToothGrowth Data
+
+```{r}
+data(ToothGrowth)
+summary(ToothGrowth)
+head(ToothGrowth)
+with(ToothGrowth, table(dose,supp))
+```
+
+The `coplot` example from the `help()` file gives a nice overview of the results.  In this, you can see a series of length measurements from each of the 10 animals at 3 dose levels for each of the two supplement forms.  A dose-response trend seems clear in the data.
+
+To be clear, *independent* groups of 10 animals were used for each of 6 different conditions for 60 animals in all.  (i.e., the groups were not paired.)
+
+
+```{r, echo=FALSE}
+
+require(graphics)
+coplot(len ~ dose | supp, 
+       data = ToothGrowth, panel = panel.smooth,
+       xlab = "ToothGrowth vs. supplement & dose",
+       ylab = "length"
+       )
+
+```
+
+
+## Statistical Effects of Dose & Supplement
+
+### Overview 
+
+A summary boxplots from the data suggest some inferential questions to test.
+
+
+```{r, echo=FALSE}
+par(mfrow=c(1,2))
+
+boxplot(len ~ supp, data = ToothGrowth,
+        main="By Supplement", 
+        ylab="Length")
+
+boxplot(len ~ dose, data = ToothGrowth,
+        main="By Dose level", 
+        ylab="Length")
+```
+
+(The lower and upper ends of the [box-and-whisker plot](http://en.wikipedia.org/wiki/Box_plot) boxes represent the 25th and 75th quartiles of the data.  The dashed lines represent the extent to the minimum and maximum values of the data, and the midline across the box represents the *median* of the data.)
+
+There seems to be a clear dose response relationship between the supplements and toothgrowth, but no *clear* difference between the supplement types.
+
+### Subsetting Growth by Dose and Supplement Type
+
+Breaking the dose response relationship out *by* supplement type highlights some interesting differences between the supplement types at different doses. 
+
+Although there does not seem to be a significant difference in growth between the supplements at the *highest* dose level, at the low and middle dose levels, the `OJ` supplement demonstrates more growth.  I will present the statistical test results below.
+
+
+```{r, echo=FALSE}
+par(mfrow=c(1,2))
+
+boxplot(len ~ dose, 
+        data = ToothGrowth[ToothGrowth$supp=="OJ",],
+        ylim=c(0,35),
+        main="Suppl OJ",
+        xlab="Dose",
+        ylab="Length"
+        )
+
+boxplot(len ~ dose, 
+        data = ToothGrowth[ToothGrowth$supp=="VC",],
+        ylim=c(0,35),
+        main="Suppl VC",
+        xlab="Dose",
+        ylab="Length"
+        )
+```
+
+
+### Hypothesis Tests of growth vs. supplement *Type*
+
+The underlying assumption to this analysis is that the growth measurements at given dose and supplement type are iid random variables.  With sample sizes, this makes the *t-test* appropriate.  The sample groups are not paired (different animals).  Based on the wide variation in box sizes above, it seems prudent to use the default assumption of unequal variances between the rgoups.  
+
+
+Over the data for *all* dose levels, we cannot reject the hypothesis that the difference in tooth growth between the supplement types is zero, because the 95% CI includes zero.
+
+
+```{r}
+t.test( len ~ supp, ToothGrowth )
+```
+
+Tooth growth between supplements at the *same* dose levels, does show some significant differences though.  
+
+The `R` code below will build up a result dataframe with t-test results for the tooth growth between supplements, by dose levels:
+
+
+```{r}
+dose <- c(0.5,1.0,2.0)
+
+results <- data.frame()
+for (d in dose) {
+  tdose <- t.test( len ~ supp, 
+                   subset(ToothGrowth,
+                          dose==d))
+  row <- with(tdose, 
+              cbind(d,statistic,parameter,
+                    conf.int[1],conf.int[2],
+                    p.value)
+              )
+  results <- rbind(results, row)
+}
+
+names(results) <- c("Dose","t.stat","df",
+                    "95CI.lo", "95CI.hi",
+                    "pval")
+
+round(results,3)
+```
+

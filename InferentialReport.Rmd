@@ -27,7 +27,7 @@ In this exercise, we will perform some basic exploratory and inferential data an
 
 ## Basic Summary of the ToothGrowth Data
 
-```{r}
+```{r, collapse=TRUE}
 data(ToothGrowth)
 summary(ToothGrowth)
 head(ToothGrowth)

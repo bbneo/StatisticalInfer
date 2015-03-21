@@ -15,6 +15,7 @@ The distribution of a sample mean statistic with reference to the population mea
 n = 40
 lambda = 0.2
 set.seed(3.1415926)
+options(digits=3)
 ```
 
 In this report, we will illustrate the nature of the distribution of the `n = ` `r n` *sample mean* statistic from an exponential population distribution.  What we will see is that:
@@ -85,16 +86,16 @@ lines(x,scale*dt((x-sampleMean),df=n-1), col = "darkgreen", lwd = 2)
 lines(x,scale*dnorm(x,mean=sampleMean,sd=sampleSd), col = "darkred", lwd = 2)
 ```
 
-The `mean` of the *sample means* is `r sampleMean` (represented as a solid vertical dark blue line) with a 95% confidence interval for the *sample means* represented by the dotted dark blue vertical lines on the figure at:
+The `mean` of the *sample means* is `r sampleMean` (represented as a solid vertical dark blue line) with a 95% confidence interval for the distribution of the *sample means* represented by the dotted dark blue vertical lines on the figure at:
 
 ```{r} 
 sampleMean + c(-1,1)*qnorm(0.975)*sampleSd
 ```  
 
 
-The *population mean* and standard deviation are represented by a vertical line at `x = ` `r theorMean`, and dashed lines at `x = ` `r theorMean + c(-1,1)*theorSd`.  
+The *population mean* and standard deviation are represented by a vertical line at `x = ` `r theorMean`, and dashed lines at `x = ` `r theorMean + c(-1,1)*theorSd`.  The population distribution for **single** random iid samples from an exponential distribution would give the very wide `95%` *standard* quartile `r c(-1,1)*qnorm(0.975)` `* theoreticalSd` interval of **`r theorMean + c(-1,1)*qnorm(0.975)*theorSd` !!**  
 
-Notice that these population variation lines are just **one** population `sd` about the mean... as opposed to a normal distribution `95%` quartile `r c(-1,1)*qnorm(0.975)` `* sd` interval.
+But the skewness of the `exponential` distribution makes the normal distribution a poor tool for describing its variation.
 
 A `t density distribution` with `df= ` `r n-1` is overlaid in dark green.
 
@@ -118,39 +119,45 @@ abline(v=sampleMean + c(-1,1)*qnorm(0.975)*sampleSd,lwd=2,col="darkblue",lty="do
 abline( v = c(sampleMean + c(-1,1)*qt(0.975,n-1)*sampleSd/sqrt(n)), 
         col = "red", lwd = 2, lty = "longdash" )
 
-lines(x,scale*dnorm(x,mean=sampleMean,sd=sampleSd), col = "darkred", lwd = 2)
+lines(x, scale*dt((x-sampleMean),df=n-1), 
+      col = "darkgreen", lwd = 2)
+
+lines(x, scale*dnorm(x,mean=sampleMean,sd=sampleSd), 
+      col = "darkred", lwd = 2)
 ```
 
 The 95% confidence interval for the estimation of the `population (theoretical) mean` from this set of samples using a `t` statistic is:  
 
-```{r}
-sampleMean + c(-1,1)*qt(0.975,n-1)*sampleSd/sqrt(n)
+```{r, collapse=TRUE}
+SEmean <- sampleSd/sqrt(n)
+SEmean
+
+qt(0.975,n-1)
+sampleMean + c(-1,1)*qt(0.975,n-1)*SEmean
 ```
 
 which is represented in the figure by vertical red dashed lines.  
 
+The 95% CI for the *sample mean* as an estimator of the *population mean* is (using a Z quartile):
 
-## IN SUMMARY
+```{r, collapse=TRUE}
+qnorm(0.975)
+sampleMean + c(-1,1)*qnorm(0.975)*SEmean
+```
 
-For this report, `n =` `r n`:
+Which is very close to the 95% CI obtained using a `t` statistic, just slightly more narrow.
+
+\pagebreak
+
+## In Summary
+
+For this report, for `n =` `r n` `> 20-30`, the distribution of sample means approaches a normal `Z` distribution:
 
 statistic | mean | sd | 95% CI 
 ----------|------|-----|--------
 population theoretical | `r theorMean` | `r theorSd` | --
-sample mean | `r sampleMean` | `r sampleSd` | `r sampleMean + c(-1,1)*qnorm(0.975)*sampleSd`
-pop. mean *estim* | `r sampleMean` |  | `r sampleMean + c(-1,1)*qnorm(0.975)*sampleSd/sqrt(n)`
-
-and the 95% CI for the *sample mean* as an estimator of the *population mean* is (using a Z quartile):
-
-```{r}
-sampleMean + c(-1,1)*qnorm(0.975)*sampleSd/sqrt(n)
-```
-
-`qnorm(0.975) = ` `r qnorm(0.975)`, and the `SE`_`mean`_ is:
-
-```{r} 
-sampleSd/sqrt(n)
-```
+dist. of sample mean | `r sampleMean` | `r sampleSd` | `r sampleMean + c(-1,1)*qnorm(0.975)*sampleSd`
+pop. mean *estim* | `r sampleMean` |  | `r sampleMean + c(-1,1)*qnorm(0.975)*SEmean`
 
 
 - the *sample mean* statistic can be a good estimator of the mean of the population (exponential) distribution,
@@ -159,8 +166,8 @@ sampleSd/sqrt(n)
 
 - the `standard` *`error`* of this population mean estimator (`SE`_`mean`_) depends on the `standard deviation` of the sample means and the sample size, and
 
-- the `standard error` of this *mean estimator* has a much narrower confidence interval for the **`population mean`** estimate than either
+- the `standard error` of this *mean estimator* has a much narrower confidence interval for the **`population mean`** estimate than either:
 
-    - the *standard deviation* of the distribution of the sample means, or
-    - the *standard deviation* of the population distribution itself (the distribution of a large collection of random exponentials)
+    - the *standard deviation* of the distribution of the *sample* means, or
+    - the *standard deviation* of the *population distribution itself* (the distribution of a large collection of exponentially distributed random numbers)
 

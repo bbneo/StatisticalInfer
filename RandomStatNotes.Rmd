@@ -1,0 +1,8 @@
+#
+#  RandomStatNotes
+#
+#  4/1/2015
+
+[MIT Crosslinks](http://crosslinks.mit.edu/topic/bayes-rule/)
+
+
